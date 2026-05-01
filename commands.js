@@ -244,7 +244,7 @@ const commands = {
       .addNumberOption(option => option.setName('multa').setDescription('Importo multa').setRequired(true))
       .addStringOption(option => option.setName('oggetti_sequestrati').setDescription('Oggetti sequestrati').setRequired(true))
       .addStringOption(option => option.setName('oggetti_consegnati').setDescription('Oggetti consegnati').setRequired(true))
-      .addStringOption(option => option.setName('foto').setDescription('URL foto').setRequired(true))
+      .addAttachmentOption(option => option.setName('foto').setDescription('Foto arrestato').setRequired(true))
       .addUserOption(option => option.setName('agenti').setDescription('Agenti coinvolti').setRequired(false)),
     execute: async (interaction) => {
       const nome = interaction.options.getString('nome');
@@ -254,7 +254,8 @@ const commands = {
       const multa = interaction.options.getNumber('multa');
       const oggettiSequestrati = interaction.options.getString('oggetti_sequestrati');
       const oggettiConsegnati = interaction.options.getString('oggetti_consegnati');
-      const foto = interaction.options.getString('foto');
+      const fotoAttachment = interaction.options.getAttachment('foto');
+      const foto = fotoAttachment.url;
       
       const agentiMenzionati = interaction.mentions.users.map(u => u.id) || [interaction.user.id];
       
@@ -273,7 +274,7 @@ const commands = {
       const embed = new EmbedBuilder()
         .setColor(0xff0000)
         .setTitle(`🚔 ARRESTO REGISTRATO`)
-        .setThumbnail(foto)
+        .setImage(foto)
         .setDescription(`**Arrestato:** ${nome} ${cognome}`)
         .setFields([
           { name: '🆔 ID Arresto', value: `\`${arrestId}\``, inline: true },
@@ -430,7 +431,7 @@ const commands = {
       .addStringOption(option => option.setName('reati').setDescription('Reati contestati').setRequired(true))
       .addStringOption(option => option.setName('chi_espone').setDescription('Chi espone la denuncia').setRequired(true))
       .addStringOption(option => option.setName('prove_reato').setDescription('Descrizione prove').setRequired(true))
-      .addStringOption(option => option.setName('foto_url').setDescription('URL foto').setRequired(false))
+      .addAttachmentOption(option => option.setName('foto').setDescription('Foto prova').setRequired(false))
       .addStringOption(option => option.setName('link_prove').setDescription('Link prove').setRequired(false)),
     execute: async (interaction) => {
       const nome = interaction.options.getString('nome');
@@ -440,7 +441,8 @@ const commands = {
       const reati = interaction.options.getString('reati');
       const chiEspone = interaction.options.getString('chi_espone');
       const proveReato = interaction.options.getString('prove_reato');
-      const fotoUrl = interaction.options.getString('foto_url');
+      const fotoAttachment = interaction.options.getAttachment('foto');
+      const fotoUrl = fotoAttachment ? fotoAttachment.url : null;
       const linkProve = interaction.options.getString('link_prove');
       
       const denunciaId = db.addDenuncia(nome, cognome, dataNascita, data, reati, chiEspone, proveReato, fotoUrl, linkProve);
@@ -456,7 +458,7 @@ const commands = {
           { name: 'Reati', value: `\`\`\`${reati}\`\`\``, inline: false },
           { name: 'Esposta da', value: `\`${chiEspone}\``, inline: true },
           { name: 'Prove', value: `\`\`\`${proveReato}\`\`\``, inline: false },
-          ...(fotoUrl ? [{ name: 'Foto', value: `[Link](${fotoUrl})`, inline: false }] : []),
+          ...(fotoUrl ? [{ name: 'Foto Prova', value: `[Allegato](${fotoUrl})`, inline: false }] : []),
           ...(linkProve ? [{ name: 'Link Prove', value: `[Link](${linkProve})`, inline: false }] : [])
         ])
         .setTimestamp();
@@ -693,7 +695,7 @@ const commands = {
       .addStringOption(option => option.setName('cognome').setDescription('Cognome').setRequired(true))
       .addStringOption(option => option.setName('data_nascita').setDescription('Data di nascita (GG/MM/YYYY)').setRequired(true))
       .addStringOption(option => option.setName('motivo').setDescription('Motivo della pulizia').setRequired(true))
-      .addStringOption(option => option.setName('foto_pagamento').setDescription('URL foto comprovante pagamento').setRequired(true)),
+      .addAttachmentOption(option => option.setName('foto_pagamento').setDescription('Foto comprovante pagamento').setRequired(true)),
     execute: async (interaction) => {
       if (!hasRole(interaction.member, PULISCI_FEDINA_ROLE)) {
         return interaction.reply({ content: '❌ Non hai il permesso per usare questo comando!', ephemeral: true });
@@ -703,7 +705,8 @@ const commands = {
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
       const motivo = interaction.options.getString('motivo');
-      const fotoPagamento = interaction.options.getString('foto_pagamento');
+      const fotoAttachment = interaction.options.getAttachment('foto_pagamento');
+      const fotoPagamento = fotoAttachment.url;
       
       const result = db.pulisciFedina(nome, cognome, dataNascita);
       
@@ -714,7 +717,7 @@ const commands = {
       const embed = new EmbedBuilder()
         .setColor(0x00ff00)
         .setTitle(`✅ FEDINA PULITA`)
-        .setThumbnail(fotoPagamento)
+        .setImage(fotoPagamento)
         .setFields([
           { name: 'Persona', value: `${nome} ${cognome}`, inline: true },
           { name: 'Data Nascita', value: `\`${dataNascita}\``, inline: true },
@@ -731,9 +734,6 @@ const commands = {
 
 module.exports = commands;
 
-
-const commands = {
-  timbratura: {
     data: new SlashCommandBuilder()
       .setName('timbratura')
       .setDescription('Apre il cartellino di timbratura LSPD')
