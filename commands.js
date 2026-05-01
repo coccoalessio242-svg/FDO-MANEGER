@@ -299,6 +299,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const reati = interaction.options.getString('reati');
       const multa = interaction.options.getNumber('multa');
       const oggettiSequestrati = interaction.options.getString('oggetti_sequestrati');
@@ -391,6 +398,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const motivo = interaction.options.getString('motivo');
       const dataScadenza = interaction.options.getString('data_scadenza');
       const fotoAttachment = interaction.options.getAttachment('foto');
@@ -453,6 +467,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const motivo = interaction.options.getString('motivo');
       
       const result = db.removePda(nome, cognome, dataNascita, motivo);
@@ -492,6 +513,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const data = interaction.options.getString('data');
       const reati = interaction.options.getString('reati');
       const chiEspone = interaction.options.getString('chi_espone');
@@ -562,6 +590,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const data = interaction.options.getString('data');
       const reato = interaction.options.getString('reato');
       const agente = interaction.options.getUser('agente') || interaction.user;
@@ -626,6 +661,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const data = interaction.options.getString('data');
       const targa = interaction.options.getString('targa');
       const motivo = interaction.options.getString('motivo');
@@ -729,20 +771,13 @@ const commands = {
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
       
+      // Registra la persona nel database se non esiste
+      db.addPersona(nome, cognome, dataNascita);
+      
       let persona = db.getPersona(nome, cognome, dataNascita);
       
       if (!persona) {
-        persona = {
-          nome,
-          cognome,
-          dataNascita,
-          fedina: 'pulita',
-          arresti: [],
-          denuncie: [],
-          multe: [],
-          macchineSequestrate: [],
-          pda: null
-        };
+        return interaction.reply({ content: '❌ Errore nel caricamento dei dati!', ephemeral: true });
       }
       
       const embed = createInfoPersonaEmbed(persona);
@@ -767,6 +802,13 @@ const commands = {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
       const dataNascita = interaction.options.getString('data_nascita');
+      
+      // Verifica che la persona esista nel database
+      let persona = db.getPersona(nome, cognome, dataNascita);
+      if (!persona) {
+        return interaction.reply({ content: `❌ Persona non trovata nel database! Prima fai \`/info ${nome} ${cognome} ${dataNascita}\` per registrarla.`, ephemeral: true });
+      }
+      
       const motivo = interaction.options.getString('motivo');
       const fotoAttachment = interaction.options.getAttachment('foto_pagamento');
       const fotoPagamento = fotoAttachment.url;

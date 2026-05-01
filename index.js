@@ -1,8 +1,13 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection, REST, Routes, ChannelType } = require('discord.js');
+const express = require('express');
 const db = require('./database');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages] });
+const app = express();
+
+// Middleware
+app.use(express.json());
 
 client.commands = new Collection();
 
@@ -139,4 +144,114 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
+// ====== API ROUTES ======
+
+// Variabile globale per i player online da FiveM
+let fivemPlayersOnline = [];
+
+// Endpoint per ricevere i dati dei player da FiveM
+app.post('/api/fivem-players', (req, res) => {
+  const { players } = req.body;
+  
+  if (Array.isArray(players)) {
+    fivemPlayersOnline = players;
+    if (process.env.DEBUG) {
+      console.log(`✅ [FiveM] ${players.length} player online`);
+    }
+  }
+  
+  res.json({ success: true, message: 'Dati ricevuti' });
+});
+
+// Funzione per controllare se un player è online in FiveM
+function isPlayerOnlineFiveM(personaIdentifier) {
+  return fivemPlayersOnline.some(p => 
+    p.identifier && p.identifier.includes(personaIdentifier)
+  );
+}
+
+// Endpoint per cercare una persona
+app.get('/api/persona/:nome/:cognome/:dataNascita', (req, res) => {
+  const { nome, cognome, dataNascita } = req.params;
+  const persona = db.getPersona(nome, cognome, dataNascita);
+  
+  if (!persona) {
+    return res.status(404).json({ error: 'Persona non trovata', success: false });
+  }
+  
+  res.json({
+    success: true,
+    data: persona
+  });
+});
+
+// Endpoint per ottenere tutte le persone
+app.get('/api/persone', (req, res) => {
+  const db_data = db.loadDatabase();
+  const persone = Object.values(db_data.persone || {});
+  
+  res.json({
+    success: true,
+    total: persone.length,
+    data: persone
+  });
+});
+
+// Endpoint per cercare persone per nome
+app.get('/api/persone/ricerca/:termine', (req, res) => {
+  const { termine } = req.params;
+  const db_data = db.loadDatabase();
+  const persone = Object.values(db_data.persone || {});
+  
+  const risultati = persone.filter(p => 
+    p.nome.toLowerCase().includes(termine.toLowerCase()) || 
+    p.cognome.toLowerCase().includes(termine.toLowerCase())
+  );
+  
+  res.json({
+    success: true,
+    total: risultati.length,
+    data: risultati
+  });
+});
+
+// Endpoint per ottenere info dettagliate di una persona (con arresti, denuncie, ecc)
+app.get('/api/persona-completa/:nome/:cognome/:dataNascita', (req, res) => {
+  const { nome, cognome, dataNascita } = req.params;
+  const persona = db.getPersona(nome, cognome, dataNascita);
+  
+  if (!persona) {
+    return res.status(404).json({ error: 'Persona non trovata', success: false });
+  }
+  
+  const db_data = db.loadDatabase();
+  
+  // Aggiungi dettagli degli arresti
+  const arresti = persona.arresti.map(id => db_data.arresti[id]).filter(a => a);
+  // Aggiungi dettagli delle denuncie
+  const denuncie = persona.denuncie.map(id => db_data.denuncie[id]).filter(d => d);
+  // Aggiungi dettagli delle multe
+  const multe = persona.multe.map(id => db_data.multe[id]).filter(m => m);
+  // Aggiungi dettagli del PDA
+  const pda = persona.pda ? db_data.pda[persona.pda] : null;
+  
+  res.json({
+    success: true,
+    data: {
+      ...persona,
+      arresti: arresti,
+      denuncie: denuncie,
+      multe: multe,
+      pda: pda
+    }
+  });
+});
+
+const API_PORT = process.env.API_PORT || 3001;
+
 client.login(TOKEN);
+
+// Avvia il server API
+app.listen(API_PORT, () => {
+  console.log(`🌐 API Server running su http://localhost:${API_PORT}`);
+});
