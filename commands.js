@@ -32,7 +32,7 @@ function createInfoPersonaEmbed(persona) {
       { name: '\u200b', value: '\u200b' }
     ]);
   
-  if (persona.arresti.length > 0) {
+  if (persona.arresti && persona.arresti.length > 0) {
     const arresti = persona.arresti.map(arrestId => {
       const arr = db.getArresto(arrestId);
       if (!arr) return null;
@@ -48,7 +48,7 @@ function createInfoPersonaEmbed(persona) {
     }
   }
   
-  if (persona.macchineSequestrate.length > 0) {
+  if (persona.macchineSequestrate && persona.macchineSequestrate.length > 0) {
     embed.addFields({
       name: '🚗 Macchine Sequestrate',
       value: persona.macchineSequestrate.map(m => `Targa: \`${m.targa}\``).join('\n'),
@@ -56,7 +56,7 @@ function createInfoPersonaEmbed(persona) {
     });
   }
   
-  if (persona.denuncie.length > 0) {
+  if (persona.denuncie && persona.denuncie.length > 0) {
     const denuncie = persona.denuncie.map(denId => {
       const den = db.getDenuncia(denId);
       if (!den) return null;
@@ -72,7 +72,7 @@ function createInfoPersonaEmbed(persona) {
     }
   }
   
-  if (persona.multe.length > 0) {
+  if (persona.multe && persona.multe.length > 0) {
     const multe = persona.multe.map(multaId => {
       const multa = db.getMulta(multaId);
       if (!multa) return null;
@@ -788,6 +788,37 @@ const commands = {
           { name: 'Pulita da', value: `\`${interaction.user.username}\``, inline: true },
           { name: 'Data', value: new Date().toLocaleString('it-IT'), inline: true }
         ])
+        .setTimestamp();
+      
+      await interaction.reply({ embeds: [embed] });
+    }
+  },
+
+  cartellino_sistema: {
+    data: new SlashCommandBuilder()
+      .setName('cartellino_sistema')
+      .setDescription('Visualizza gli agenti in servizio'),
+    execute: async (interaction) => {
+      const allAgenti = db.getAllAgenti?.() || {};
+      const agentiInServizio = Object.values(allAgenti).filter(agente => agente.inServizio);
+      
+      let descriptionText = '';
+      if (agentiInServizio.length === 0) {
+        descriptionText = '✅ Nessun agente in servizio';
+      } else {
+        descriptionText = agentiInServizio.map(agente => {
+          const inizio = new Date(agente.timbraInizio);
+          const now = new Date();
+          const ore = (now - inizio) / (1000 * 60 * 60);
+          return `👮 **${agente.nome}** - In servizio da ${ore.toFixed(2)}h`;
+        }).join('\n');
+      }
+      
+      const embed = new EmbedBuilder()
+        .setColor(0x00ff00)
+        .setTitle('🚔 AGENTI IN SERVIZIO')
+        .setDescription(descriptionText)
+        .setFooter({ text: 'Sistema Cartellini LSPD' })
         .setTimestamp();
       
       await interaction.reply({ embeds: [embed] });

@@ -57,6 +57,11 @@ function getAgente(userId) {
   return db.agenti[userId] || null;
 }
 
+function getAllAgenti() {
+  const db = loadDatabase();
+  return db.agenti || {};
+}
+
 function addPersona(nome, cognome, dataNascita) {
   const db = loadDatabase();
   const personaId = `${nome.trim()}-${cognome.trim()}-${dataNascita.trim()}`.toLowerCase();
@@ -349,6 +354,7 @@ module.exports = {
   addAgente,
   updateAgente,
   getAgente,
+  getAllAgenti,
   addPersona,
   getPersona,
   addArresto,

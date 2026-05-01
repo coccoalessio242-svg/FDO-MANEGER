@@ -7,12 +7,18 @@
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
-  "keywords": ["discord", "bot", "gta", "rp", "lspd"],
+  "keywords": [
+    "discord",
+    "bot",
+    "gta",
+    "rp",
+    "lspd"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.11.0",
-    "dotenv": "^16.3.1"
+    "discord.js": "^14.26.4",
+    "dotenv": "^16.6.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
