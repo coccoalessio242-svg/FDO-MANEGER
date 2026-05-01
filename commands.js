@@ -10,6 +10,19 @@ function hasRole(member, roleName) {
   return member.roles.cache.some(role => role.name === roleName || role.id === roleName);
 }
 
+async function sendToCartellinoChannel(interaction, embed) {
+  if (CARTELLINO_CHANNEL_ID) {
+    try {
+      const channel = await interaction.client.channels.fetch(CARTELLINO_CHANNEL_ID);
+      if (channel) {
+        await channel.send({ embeds: [embed] });
+      }
+    } catch (error) {
+      console.error('Errore nell\'invio al canale cartellini:', error);
+    }
+  }
+}
+
 function createInfoPersonaEmbed(persona) {
   const embed = new EmbedBuilder()
     .setColor(persona.fedina === 'pulita' ? 0x00ff00 : 0xff0000)
@@ -240,7 +253,12 @@ const commands = {
       }
       
       const agente = interaction.options.getUser('agente');
-      const agenteData = db.getAgente(agente.id);
+      let agenteData = db.getAgente(agente.id);
+      
+      if (!agenteData) {
+        db.addAgente(agente.id, agente.username);
+        agenteData = db.getAgente(agente.id);
+      }
       
       if (!agenteData) {
         return interaction.reply({ content: '⚠️ Agente non trovato!', ephemeral: true });
@@ -325,6 +343,7 @@ const commands = {
         .setFooter({ text: 'LSPD Database System' })
         .setTimestamp();
       
+      await sendToCartellinoChannel(interaction, embed);
       await interaction.reply({ embeds: [embed] });
     }
   },
@@ -499,6 +518,7 @@ const commands = {
         ])
         .setTimestamp();
       
+      await sendToCartellinoChannel(interaction, embed);
       await interaction.reply({ embeds: [embed] });
     }
   },
@@ -561,6 +581,7 @@ const commands = {
         ])
         .setTimestamp();
       
+      await sendToCartellinoChannel(interaction, embed);
       await interaction.reply({ embeds: [embed] });
     }
   },
@@ -631,6 +652,7 @@ const commands = {
         ])
         .setTimestamp();
       
+      await sendToCartellinoChannel(interaction, embed);
       await interaction.reply({ embeds: [embed] });
     }
   },
