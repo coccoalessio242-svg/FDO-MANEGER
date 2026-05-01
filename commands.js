@@ -729,11 +729,9 @@ const commands = {
       
       await interaction.reply({ embeds: [embed] });
     }
-  }
-};
+  },
 
-module.exports = commands;
-
+  timbratura: {
     data: new SlashCommandBuilder()
       .setName('timbratura')
       .setDescription('Apre il cartellino di timbratura LSPD')
