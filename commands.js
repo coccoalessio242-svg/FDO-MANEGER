@@ -115,6 +115,12 @@ function createInfoPersonaEmbed(persona) {
         inline: false
       });
     }
+  } else {
+    embed.addFields({
+      name: '🔫 Porto d\'Armi (PDA)',
+      value: '❌ Non possiede PDA',
+      inline: false
+    });
   }
   
   return embed;
