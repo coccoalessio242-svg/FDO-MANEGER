@@ -158,7 +158,6 @@ const commands = {
           '📋 **Info** - Visualizza tutte le tue statistiche (ore totali, arresti, PDA emessi, etc.)')
         .setFields([
           { name: '\u200b', value: '\u200b' },
-          { name: 'Ore Totali', value: `${agenteData.oreTotali.toFixed(2)}h`, inline: true },
           { name: 'Stato', value: agenteData.inServizio ? '🟢 IN SERVIZIO' : '⚫ FUORI SERVIZIO', inline: true },
           { name: '\u200b', value: '\u200b' }
         ])
