@@ -132,6 +132,29 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
     
+    if (action === 'info_bottone') {
+      const agente = db.getAgente(userId);
+      if (!agente) {
+        return interaction.reply({ content: '⚠️ Nessun dato trovato!', ephemeral: true });
+      }
+      
+      const embed = {
+        color: 0x0099ff,
+        title: `📋 Info Agente - ${agente.nome}`,
+        fields: [
+          { name: 'Ore Cartellino', value: `\`${agente.oreServizio.toFixed(2)}h\``, inline: true },
+          { name: 'Ore Totali', value: `\`${agente.oreTotali.toFixed(2)}h\``, inline: true },
+          { name: 'Stato', value: agente.inServizio ? '🟢 In Servizio' : '⚫ Fuori Servizio', inline: true },
+          { name: 'PDA Emessi', value: `\`${agente.pdaEmessi}\``, inline: true },
+          { name: 'Arresti', value: `\`${agente.arresti}\``, inline: true },
+          { name: 'Multe', value: `\`${agente.multe}\``, inline: true },
+          { name: 'Sequestri', value: `\`${agente.sequestri}\``, inline: true }
+        ]
+      };
+      
+      await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+    
     if (action === 'stato') {
       const agente = db.getAgente(userId);
       if (!agente) {

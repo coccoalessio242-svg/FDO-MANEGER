@@ -23,11 +23,29 @@ async function sendToCartellinoChannel(interaction, embed) {
   }
 }
 
+function calculateAge(dataNascitaStr) {
+  // Parsa la data nel formato GG/MM/YYYY
+  const [giorno, mese, anno] = dataNascitaStr.split('/').map(Number);
+  const dataNascita = new Date(anno, mese - 1, giorno);
+  const oggi = new Date();
+  
+  let eta = oggi.getFullYear() - dataNascita.getFullYear();
+  const mesiDifferenza = oggi.getMonth() - dataNascita.getMonth();
+  
+  if (mesiDifferenza < 0 || (mesiDifferenza === 0 && oggi.getDate() < dataNascita.getDate())) {
+    eta--;
+  }
+  
+  return eta;
+}
+
 function createInfoPersonaEmbed(persona) {
+  const eta = calculateAge(persona.dataNascita);
+  
   const embed = new EmbedBuilder()
     .setColor(persona.fedina === 'pulita' ? 0x00ff00 : 0xff0000)
     .setTitle(`👤 ${persona.nome} ${persona.cognome}`)
-    .setDescription(`**Data di Nascita:** ${persona.dataNascita}\n**Fedina:** ${persona.fedina === 'pulita' ? '✅ PULITA' : '🚨 SPORCA'}`)
+    .setDescription(`**Data di Nascita:** ${persona.dataNascita}\n**Età:** ${eta} anni\n**Fedina:** ${persona.fedina === 'pulita' ? '✅ PULITA' : '🚨 SPORCA'}`)
     .setFields([
       { name: '\u200b', value: '\u200b' }
     ]);
@@ -93,7 +111,7 @@ function createInfoPersonaEmbed(persona) {
     if (pdaInfo) {
       embed.addFields({
         name: '🔫 Porto d\'Armi (PDA)',
-        value: `ID: \`${pdaInfo.id}\`\nMotivo: ${pdaInfo.motivo}\nScadenza: ${pdaInfo.dataScadenza}`,
+        value: `ID: \`${pdaInfo.id}\`\nMotivo: ${pdaInfo.motivo}\n📅 Scadenza: ${pdaInfo.dataScadenza}`,
         inline: false
       });
     }
@@ -127,12 +145,13 @@ const commands = {
       const embed = new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle(`🚔 CARTELLINO LSPD - ${agenteData.nome}`)
-        .setDescription('**SALVE AGENTE LSPD**\n\nPER TIMBRARE IL TUO SERVIZIO USA QUESTI BOTTONI:\n\n' +
-          '🟢 **Timbra** - Inizia il servizio (registra ora di inizio)\n' +
-          '🔴 **Stimbra** - Termina il servizio (registra ore lavorate)\n' +
-          '📊 **Statistiche** - Visualizza le tue ore totali e statistiche\n' +
-          '⚫ **Stato** - Visualizza lo stato attuale del servizio')
+        .setDescription('**CIAO AGENTE LSPD**\n\nPER TIMBRARE IL TUO SERVIZIO UTILIZZA I SEGUENTI BOTTONI:\n\n' +
+          '🟢 **Timbra** - Registra l\'inizio del tuo turno di servizio\n' +
+          '🔴 **Stimbra** - Registra la fine del tuo turno e calcola le ore lavorate\n' +
+          '📊 **In Servizio** - Visualizza lo stato attuale del tuo servizio\n' +
+          '📋 **Info** - Visualizza tutte le tue statistiche (ore totali, arresti, PDA emessi, etc.)')
         .setFields([
+          { name: '\u200b', value: '\u200b' },
           { name: 'Ore Totali', value: `${agenteData.oreTotali.toFixed(2)}h`, inline: true },
           { name: 'Stato', value: agenteData.inServizio ? '🟢 IN SERVIZIO' : '⚫ FUORI SERVIZIO', inline: true },
           { name: '\u200b', value: '\u200b' }
@@ -152,15 +171,15 @@ const commands = {
             .setStyle(ButtonStyle.Danger)
             .setEmoji('🔴'),
           new ButtonBuilder()
-            .setCustomId(`stat_${agenteId}`)
-            .setLabel('Statistiche')
-            .setStyle(ButtonStyle.Primary)
+            .setCustomId(`stato_${agenteId}`)
+            .setLabel('In Servizio')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji('📊'),
           new ButtonBuilder()
-            .setCustomId(`stato_${agenteId}`)
-            .setLabel('Stato')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('⚫')
+            .setCustomId(`info_bottone_${agenteId}`)
+            .setLabel('Info')
+            .setStyle(ButtonStyle.Primary)
+            .setEmoji('📋')
         );
       
       // Invia il cartellino nel canale dedicato se configurato
@@ -207,6 +226,38 @@ const commands = {
       });
       
       await interaction.reply({ content: `✅ Aggiunte ${ore}h all'agente ${agente.username}`, ephemeral: true });
+    }
+  },
+
+  togli_ore: {
+    data: new SlashCommandBuilder()
+      .setName('togli_ore')
+      .setDescription('[STAFF] Togli ore a un agente')
+      .addUserOption(option => option.setName('agente').setDescription('Agente').setRequired(true))
+      .addNumberOption(option => option.setName('ore').setDescription('Numero di ore').setRequired(true)),
+    execute: async (interaction) => {
+      if (!hasRole(interaction.member, STAFF_ROLE)) {
+        return interaction.reply({ content: '❌ Solo lo staff può usare questo comando!', ephemeral: true });
+      }
+      
+      const agente = interaction.options.getUser('agente');
+      const ore = interaction.options.getNumber('ore');
+      
+      let agenteData = db.getAgente(agente.id);
+      if (!agenteData) {
+        db.addAgente(agente.id, agente.username);
+        agenteData = db.getAgente(agente.id);
+      }
+      
+      const nuoveOreServizio = Math.max(0, agenteData.oreServizio - ore);
+      const nuoreOreTotali = Math.max(0, agenteData.oreTotali - ore);
+      
+      db.updateAgente(agente.id, {
+        oreServizio: nuoveOreServizio,
+        oreTotali: nuoreOreTotali
+      });
+      
+      await interaction.reply({ content: `✅ Tolte ${ore}h all'agente ${agente.username}`, ephemeral: true });
     }
   },
 
