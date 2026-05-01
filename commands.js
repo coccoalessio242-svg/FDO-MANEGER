@@ -19,14 +19,19 @@ function createInfoPersonaEmbed(persona) {
     ]);
   
   if (persona.arresti.length > 0) {
-    embed.addFields({
-      name: '🚔 Arresti',
-      value: persona.arresti.map(arrestId => {
-        const arr = db.getArresto(arrestId);
-        return `[ID: ${arrestId}] - ${arr.reati}\n📅 ${new Date(arr.data).toLocaleDateString('it-IT')}`;
-      }).join('\n\n'),
-      inline: false
-    });
+    const arresti = persona.arresti.map(arrestId => {
+      const arr = db.getArresto(arrestId);
+      if (!arr) return null;
+      return `[ID: ${arrestId}] - ${arr.reati}\n📅 ${new Date(arr.data).toLocaleDateString('it-IT')}`;
+    }).filter(a => a !== null);
+    
+    if (arresti.length > 0) {
+      embed.addFields({
+        name: '🚔 Arresti',
+        value: arresti.join('\n\n'),
+        inline: false
+      });
+    }
   }
   
   if (persona.macchineSequestrate.length > 0) {
@@ -38,34 +43,46 @@ function createInfoPersonaEmbed(persona) {
   }
   
   if (persona.denuncie.length > 0) {
-    embed.addFields({
-      name: '📋 Denuncie',
-      value: persona.denuncie.map(denId => {
-        const den = db.getDenuncia(denId);
-        return `[ID: ${denId}] - ${den.reati}`;
-      }).join('\n'),
-      inline: false
-    });
+    const denuncie = persona.denuncie.map(denId => {
+      const den = db.getDenuncia(denId);
+      if (!den) return null;
+      return `[ID: ${denId}] - ${den.reati}`;
+    }).filter(d => d !== null);
+    
+    if (denuncie.length > 0) {
+      embed.addFields({
+        name: '📋 Denuncie',
+        value: denuncie.join('\n'),
+        inline: false
+      });
+    }
   }
   
   if (persona.multe.length > 0) {
-    embed.addFields({
-      name: '💰 Multe',
-      value: persona.multe.map(multaId => {
-        const multa = db.getMulta(multaId);
-        return `[ID: ${multaId}] - ${multa.reato}`;
-      }).join('\n'),
-      inline: false
-    });
+    const multe = persona.multe.map(multaId => {
+      const multa = db.getMulta(multaId);
+      if (!multa) return null;
+      return `[ID: ${multaId}] - ${multa.reato}`;
+    }).filter(m => m !== null);
+    
+    if (multe.length > 0) {
+      embed.addFields({
+        name: '💰 Multe',
+        value: multe.join('\n'),
+        inline: false
+      });
+    }
   }
   
   if (persona.pda) {
     const pdaInfo = db.getPda(persona.pda);
-    embed.addFields({
-      name: '🔫 Porto d\'Armi (PDA)',
-      value: `ID: \`${pdaInfo.id}\`\nMotivo: ${pdaInfo.motivo}\nScadenza: ${pdaInfo.dataScadenza}`,
-      inline: false
-    });
+    if (pdaInfo) {
+      embed.addFields({
+        name: '🔫 Porto d\'Armi (PDA)',
+        value: `ID: \`${pdaInfo.id}\`\nMotivo: ${pdaInfo.motivo}\nScadenza: ${pdaInfo.dataScadenza}`,
+        inline: false
+      });
+    }
   }
   
   return embed;

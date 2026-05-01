@@ -59,7 +59,7 @@ function getAgente(userId) {
 
 function addPersona(nome, cognome, dataNascita) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
+  const personaId = `${nome.trim()}-${cognome.trim()}-${dataNascita.trim()}`.toLowerCase();
   
   if (!db.persone[personaId]) {
     db.persone[personaId] = {
@@ -81,7 +81,7 @@ function addPersona(nome, cognome, dataNascita) {
 
 function getPersona(nome, cognome, dataNascita) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
+  const personaId = `${nome.trim()}-${cognome.trim()}-${dataNascita.trim()}`.toLowerCase();
   return db.persone[personaId] || null;
 }
 
@@ -180,7 +180,7 @@ function getPda(pdaId) {
 
 function removePda(nome, cognome, dataNascita, motivo) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
+  const personaId = `${nome.trim()}-${cognome.trim()}-${dataNascita.trim()}`.toLowerCase();
   
   if (db.persone[personaId]?.pda) {
     const pdaRecord = db.pda[db.persone[personaId].pda];
@@ -317,7 +317,7 @@ function getSequestro(sequestroId) {
 
 function removeSequestro(nome, cognome, dataNascita, targa) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
+  const personaId = `${nome.trim()}-${cognome.trim()}-${dataNascita.trim()}`.toLowerCase();
   
   if (db.persone[personaId]) {
     db.persone[personaId].macchineSequestrate = 
@@ -330,7 +330,7 @@ function removeSequestro(nome, cognome, dataNascita, targa) {
 
 function pulisciFedina(nome, cognome, dataNascita) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
+  const personaId = `${nome.trim()}-${cognome.trim()}-${dataNascita.trim()}`.toLowerCase();
   
   if (db.persone[personaId]) {
     db.persone[personaId].fedina = 'pulita';
