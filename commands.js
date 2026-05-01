@@ -156,11 +156,6 @@ const commands = {
           '🔴 **Stimbra** - Registra la fine del tuo turno e calcola le ore lavorate\n' +
           '📊 **In Servizio** - Visualizza lo stato attuale del tuo servizio\n' +
           '📋 **Info** - Visualizza tutte le tue statistiche (ore totali, arresti, PDA emessi, etc.)')
-        .setFields([
-          { name: '\u200b', value: '\u200b' },
-          { name: 'Stato', value: agenteData.inServizio ? '🟢 IN SERVIZIO' : '⚫ FUORI SERVIZIO', inline: true },
-          { name: '\u200b', value: '\u200b' }
-        ])
         .setFooter({ text: `ID: ${agenteId}` });
       
       const row = new ActionRowBuilder()
@@ -419,7 +414,8 @@ const commands = {
       .addStringOption(option => option.setName('reati').setDescription('Reati').setRequired(false))
       .addNumberOption(option => option.setName('multa').setDescription('Multa').setRequired(false))
       .addStringOption(option => option.setName('oggetti_sequestrati').setDescription('Oggetti sequestrati').setRequired(false))
-      .addStringOption(option => option.setName('oggetti_consegnati').setDescription('Oggetti consegnati').setRequired(false)),
+      .addStringOption(option => option.setName('oggetti_consegnati').setDescription('Oggetti consegnati').setRequired(false))
+      .addAttachmentOption(option => option.setName('foto').setDescription('Foto arrestato').setRequired(false)),
     execute: async (interaction) => {
       const id = interaction.options.getInteger('id');
       const arresto = db.getArresto(id);
@@ -433,6 +429,10 @@ const commands = {
       if (interaction.options.getNumber('multa') !== null) updates.multa = interaction.options.getNumber('multa');
       if (interaction.options.getString('oggetti_sequestrati')) updates.oggettiSequestrati = interaction.options.getString('oggetti_sequestrati');
       if (interaction.options.getString('oggetti_consegnati')) updates.oggettiConsegnati = interaction.options.getString('oggetti_consegnati');
+      if (interaction.options.getAttachment('foto')) {
+        const fotoAttachment = interaction.options.getAttachment('foto');
+        updates.foto = fotoAttachment.url;
+      }
       
       db.editArresto(id, updates);
       
@@ -492,7 +492,8 @@ const commands = {
       .setDescription('Modifica un PDA')
       .addIntegerOption(option => option.setName('id').setDescription('ID del PDA').setRequired(true))
       .addStringOption(option => option.setName('motivo').setDescription('Motivo').setRequired(false))
-      .addStringOption(option => option.setName('data_scadenza').setDescription('Data scadenza').setRequired(false)),
+      .addStringOption(option => option.setName('data_scadenza').setDescription('Data scadenza').setRequired(false))
+      .addAttachmentOption(option => option.setName('foto').setDescription('Foto').setRequired(false)),
     execute: async (interaction) => {
       const id = interaction.options.getInteger('id');
       const pda = db.getPda(id);
@@ -504,6 +505,10 @@ const commands = {
       const updates = {};
       if (interaction.options.getString('motivo')) updates.motivo = interaction.options.getString('motivo');
       if (interaction.options.getString('data_scadenza')) updates.dataScadenza = interaction.options.getString('data_scadenza');
+      if (interaction.options.getAttachment('foto')) {
+        const fotoAttachment = interaction.options.getAttachment('foto');
+        updates.foto = fotoAttachment.url;
+      }
       
       db.editPda(id, updates);
       
@@ -613,7 +618,9 @@ const commands = {
       .setDescription('Modifica una denuncia')
       .addIntegerOption(option => option.setName('id').setDescription('ID della denuncia').setRequired(true))
       .addStringOption(option => option.setName('reati').setDescription('Reati').setRequired(false))
-      .addStringOption(option => option.setName('prove_reato').setDescription('Prove').setRequired(false)),
+      .addStringOption(option => option.setName('prove_reato').setDescription('Prove').setRequired(false))
+      .addAttachmentOption(option => option.setName('foto').setDescription('Foto prove').setRequired(false))
+      .addStringOption(option => option.setName('link_prove').setDescription('Link prove').setRequired(false)),
     execute: async (interaction) => {
       const id = interaction.options.getInteger('id');
       const denuncia = db.getDenuncia(id);
@@ -625,6 +632,11 @@ const commands = {
       const updates = {};
       if (interaction.options.getString('reati')) updates.reati = interaction.options.getString('reati');
       if (interaction.options.getString('prove_reato')) updates.proveReato = interaction.options.getString('prove_reato');
+      if (interaction.options.getAttachment('foto')) {
+        const fotoAttachment = interaction.options.getAttachment('foto');
+        updates.foto = fotoAttachment.url;
+      }
+      if (interaction.options.getString('link_prove')) updates.linkProve = interaction.options.getString('link_prove');
       
       db.editDenuncia(id, updates);
       
@@ -682,7 +694,8 @@ const commands = {
       .setName('edit_multa')
       .setDescription('Modifica una multa')
       .addIntegerOption(option => option.setName('id').setDescription('ID della multa').setRequired(true))
-      .addStringOption(option => option.setName('reato').setDescription('Motivo multa').setRequired(false)),
+      .addStringOption(option => option.setName('reato').setDescription('Motivo multa').setRequired(false))
+      .addStringOption(option => option.setName('data').setDescription('Data multa').setRequired(false)),
     execute: async (interaction) => {
       const id = interaction.options.getInteger('id');
       const multa = db.getMulta(id);
@@ -693,6 +706,7 @@ const commands = {
       
       const updates = {};
       if (interaction.options.getString('reato')) updates.reato = interaction.options.getString('reato');
+      if (interaction.options.getString('data')) updates.data = interaction.options.getString('data');
       
       db.editMulta(id, updates);
       
@@ -796,7 +810,9 @@ const commands = {
       .setDescription('Modifica un sequestro')
       .addIntegerOption(option => option.setName('id').setDescription('ID sequestro').setRequired(true))
       .addStringOption(option => option.setName('motivo').setDescription('Motivo').setRequired(false))
-      .addNumberOption(option => option.setName('multa').setDescription('Multa').setRequired(false)),
+      .addNumberOption(option => option.setName('multa').setDescription('Multa').setRequired(false))
+      .addStringOption(option => option.setName('targa').setDescription('Targa veicolo').setRequired(false))
+      .addAttachmentOption(option => option.setName('foto').setDescription('Foto').setRequired(false)),
     execute: async (interaction) => {
       const id = interaction.options.getInteger('id');
       const sequestro = db.getSequestro(id);
@@ -808,6 +824,11 @@ const commands = {
       const updates = {};
       if (interaction.options.getString('motivo')) updates.motivo = interaction.options.getString('motivo');
       if (interaction.options.getNumber('multa') !== null) updates.multa = interaction.options.getNumber('multa');
+      if (interaction.options.getString('targa')) updates.targa = interaction.options.getString('targa');
+      if (interaction.options.getAttachment('foto')) {
+        const fotoAttachment = interaction.options.getAttachment('foto');
+        updates.foto = fotoAttachment.url;
+      }
       
       db.editSequestro(id, updates);
       
