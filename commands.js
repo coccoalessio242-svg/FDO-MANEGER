@@ -234,7 +234,6 @@ const commands = {
     data: new SlashCommandBuilder()
       .setName('arresto')
       .setDescription('Registra un arresto')
-      .addUserOption(option => option.setName('agenti').setDescription('Agenti coinvolti (tag con spazi)').setRequired(false))
       .addStringOption(option => option.setName('nome').setDescription('Nome arrestato').setRequired(true))
       .addStringOption(option => option.setName('cognome').setDescription('Cognome arrestato').setRequired(true))
       .addStringOption(option => option.setName('data_nascita').setDescription('Data di nascita (GG/MM/YYYY)').setRequired(true))
@@ -242,7 +241,8 @@ const commands = {
       .addNumberOption(option => option.setName('multa').setDescription('Importo multa').setRequired(true))
       .addStringOption(option => option.setName('oggetti_sequestrati').setDescription('Oggetti sequestrati').setRequired(true))
       .addStringOption(option => option.setName('oggetti_consegnati').setDescription('Oggetti consegnati').setRequired(true))
-      .addStringOption(option => option.setName('foto').setDescription('URL foto (obbligatorio)').setRequired(true)),
+      .addStringOption(option => option.setName('foto').setDescription('URL foto (obbligatorio)').setRequired(true))
+      .addUserOption(option => option.setName('agenti').setDescription('Agenti coinvolti (tag con spazi)').setRequired(false)),
     execute: async (interaction) => {
       const nome = interaction.options.getString('nome');
       const cognome = interaction.options.getString('cognome');
@@ -271,16 +271,23 @@ const commands = {
         .setColor(0xff0000)
         .setTitle(`🚔 ARRESTO REGISTRATO`)
         .setThumbnail(foto)
+        .setDescription(`**Arrestato:** ${nome} ${cognome}`)
         .setFields([
-          { name: 'ID Arresto', value: `${arrestId}`, inline: true },
-          { name: 'Nome', value: `${nome} ${cognome}`, inline: true },
-          { name: 'Data Nascita', value: dataNascita, inline: true },
-          { name: 'Reati', value: reati, inline: false },
-          { name: 'Multa', value: `€${multa}`, inline: true },
-          { name: 'Oggetti Sequestrati', value: oggettiSequestrati, inline: false },
-          { name: 'Oggetti Consegnati', value: oggettiConsegnati, inline: false },
-          { name: 'Data', value: new Date().toLocaleString('it-IT'), inline: true }
-        ]);
+          { name: '🆔 ID Arresto', value: `\`${arrestId}\``, inline: true },
+          { name: '📅 Data Nascita', value: `\`${dataNascita}\``, inline: true },
+          { name: '\u200b', value: '\u200b' },
+          { name: '⚖️ Reati Imputati', value: `\`\`\`${reati}\`\`\``, inline: false },
+          { name: '💰 Multa', value: `\`€${multa.toFixed(2)}\``, inline: true },
+          { name: '📅 Data Arresto', value: `\`${new Date().toLocaleDateString('it-IT')}\``, inline: true },
+          { name: '\u200b', value: '\u200b' },
+          { name: '🔒 Oggetti Sequestrati', value: `\`\`\`${oggettiSequestrati}\`\`\``, inline: false },
+          { name: '📦 Oggetti Consegnati', value: `\`\`\`${oggettiConsegnati}\`\`\``, inline: false },
+          { name: '\u200b', value: '\u200b' },
+          { name: '👮 Registrato da', value: `\`${interaction.user.username}\``, inline: true },
+          { name: '⏰ Ora', value: `\`${new Date().toLocaleTimeString('it-IT')}\``, inline: true }
+        ])
+        .setFooter({ text: 'LSPD Database System', iconURL: 'https://cdn.discordapp.com/emojis/1234567890.png' })
+        .setTimestamp();
       
       await interaction.reply({ embeds: [embed] });
     }
