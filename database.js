@@ -192,15 +192,16 @@ function removePda(nome, cognome, dataNascita, motivo) {
   return { success: false };
 }
 
-function addDenuncia(nome, cognome, data, reati, chiEspone, proveReato, fotoUrl, linkProve) {
+function addDenuncia(nome, cognome, dataNascita, data, reati, chiEspone, proveReato, fotoUrl, linkProve) {
   const db = loadDatabase();
   const denunciaId = db.nextDenunciaId++;
-  const personaId = addPersona(nome, cognome, data);
+  const personaId = addPersona(nome, cognome, dataNascita);
   
   db.denuncie[denunciaId] = {
     id: denunciaId,
     nome,
     cognome,
+    dataNascita,
     data,
     reati,
     chiEspone,
@@ -228,16 +229,17 @@ function getDenuncia(denunciaId) {
   return db.denuncie[denunciaId] || null;
 }
 
-function addMulta(agenteId, nome, cognome, data, reato) {
+function addMulta(agenteId, nome, cognome, dataNascita, data, reato) {
   const db = loadDatabase();
   const multaId = db.nextMultaId++;
-  const personaId = addPersona(nome, cognome, data);
+  const personaId = addPersona(nome, cognome, dataNascita);
   
   db.multe[multaId] = {
     id: multaId,
     agente: agenteId,
     nome,
     cognome,
+    dataNascita,
     data,
     reato,
     createdAt: new Date().toISOString()
@@ -266,16 +268,17 @@ function getMulta(multaId) {
   return db.multe[multaId] || null;
 }
 
-function addSequestro(agentiIds, nome, cognome, data, targa, motivo, multa) {
+function addSequestro(agentiIds, nome, cognome, dataNascita, data, targa, motivo, multa) {
   const db = loadDatabase();
   const sequestroId = db.nextSequestroId++;
-  const personaId = addPersona(nome, cognome, data);
+  const personaId = addPersona(nome, cognome, dataNascita);
   
   db.sequestri[sequestroId] = {
     id: sequestroId,
     agenti: agentiIds,
     nome,
     cognome,
+    dataNascita,
     data,
     targa,
     motivo,
@@ -312,9 +315,9 @@ function getSequestro(sequestroId) {
   return db.sequestri[sequestroId] || null;
 }
 
-function removeSequestro(nome, cognome, data, targa) {
+function removeSequestro(nome, cognome, dataNascita, targa) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${data}`.toLowerCase();
+  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
   
   if (db.persone[personaId]) {
     db.persone[personaId].macchineSequestrate = 
@@ -325,9 +328,9 @@ function removeSequestro(nome, cognome, data, targa) {
   return false;
 }
 
-function pulisciFedina(nome, cognome, data) {
+function pulisciFedina(nome, cognome, dataNascita) {
   const db = loadDatabase();
-  const personaId = `${nome}-${cognome}-${data}`.toLowerCase();
+  const personaId = `${nome}-${cognome}-${dataNascita}`.toLowerCase();
   
   if (db.persone[personaId]) {
     db.persone[personaId].fedina = 'pulita';
