@@ -13,6 +13,7 @@ client.commands = commands;
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
+const CARTELLINO_CHANNEL_ID = process.env.CARTELLINO_CHANNEL_ID;
 
 // Ruoli autorizzati
 const STAFF_ROLE = process.env.STAFF_ROLE || 'Staff LSPD';
@@ -47,8 +48,12 @@ client.on('interactionCreate', async (interaction) => {
     try {
       await command.execute(interaction, client);
     } catch (error) {
-      console.error(error);
-      const errorMessage = { content: '❌ C\'è stato un errore nell\'esecuzione del comando!', ephemeral: true };
+      console.error('❌ Errore nel comando:', error);
+      const errorMsg = error.message || 'Errore sconosciuto';
+      const errorMessage = { 
+        content: `❌ C'è stato un errore nell'esecuzione del comando!\n\`\`\`${errorMsg}\`\`\``, 
+        ephemeral: true 
+      };
       if (interaction.replied) {
         await interaction.followUp(errorMessage);
       } else {

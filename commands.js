@@ -3,6 +3,7 @@ const db = require('./database');
 
 const STAFF_ROLE = process.env.STAFF_ROLE || 'Staff LSPD';
 const PULISCI_FEDINA_ROLE = process.env.PULISCI_FEDINA_ROLE || 'Comandante';
+const CARTELLINO_CHANNEL_ID = process.env.CARTELLINO_CHANNEL_ID;
 
 function hasRole(member, roleName) {
   if (!member) return false;
@@ -113,18 +114,17 @@ const commands = {
       const embed = new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle(`🚔 CARTELLINO LSPD - ${agenteData.nome}`)
-        .setDescription('**SALVE AGENTE LSPD**\n\nPER TIMBRARE IL TUO SERVIZIO USA QUESTI BOTTONI:\n' +
-          '🟢 **Timbra** - Inizia il servizio\n' +
-          '🔴 **Stimbra** - Termina il servizio\n' +
-          '📊 **Statistiche** - Visualizza ore e statistiche\n' +
-          '⚫ **Stato** - Visualizza stato attuale')
+        .setDescription('**SALVE AGENTE LSPD**\n\nPER TIMBRARE IL TUO SERVIZIO USA QUESTI BOTTONI:\n\n' +
+          '🟢 **Timbra** - Inizia il servizio (registra ora di inizio)\n' +
+          '🔴 **Stimbra** - Termina il servizio (registra ore lavorate)\n' +
+          '📊 **Statistiche** - Visualizza le tue ore totali e statistiche\n' +
+          '⚫ **Stato** - Visualizza lo stato attuale del servizio')
         .setFields([
-          { name: 'Ore Totali', value: `\`${agenteData.oreTotali.toFixed(2)}h\``, inline: true },
+          { name: 'Ore Totali', value: `${agenteData.oreTotali.toFixed(2)}h`, inline: true },
           { name: 'Stato', value: agenteData.inServizio ? '🟢 IN SERVIZIO' : '⚫ FUORI SERVIZIO', inline: true },
           { name: '\u200b', value: '\u200b' }
         ])
-        .setFooter({ text: `ID: ${agenteId}` })
-        .setTimestamp();
+        .setFooter({ text: `ID: ${agenteId}` });
       
       const row = new ActionRowBuilder()
         .addComponents(
@@ -150,7 +150,21 @@ const commands = {
             .setEmoji('⚫')
         );
       
-      await interaction.reply({ embeds: [embed], components: [row] });
+      // Invia il cartellino nel canale dedicato se configurato
+      if (CARTELLINO_CHANNEL_ID) {
+        try {
+          const channel = await interaction.client.channels.fetch(CARTELLINO_CHANNEL_ID);
+          if (channel) {
+            await channel.send({ embeds: [embed], components: [row] });
+            await interaction.reply({ content: `✅ Cartellino di ${agente.username} inviato al canale!`, ephemeral: true });
+          }
+        } catch (error) {
+          console.error('Errore nell\'invio del cartellino:', error);
+          await interaction.reply({ embeds: [embed], components: [row] });
+        }
+      } else {
+        await interaction.reply({ embeds: [embed], components: [row] });
+      }
     }
   },
 
@@ -274,7 +288,8 @@ const commands = {
       const fotoAttachment = interaction.options.getAttachment('foto');
       const foto = fotoAttachment.url;
       
-      const agentiMenzionati = interaction.mentions.users.map(u => u.id) || [interaction.user.id];
+      const agentiOption = interaction.options.getUser('agenti');
+      const agentiMenzionati = agentiOption ? [agentiOption.id] : [interaction.user.id];
       
       const arrestId = db.addArresto(
         agentiMenzionati,
@@ -596,7 +611,8 @@ const commands = {
       const multa = interaction.options.getNumber('multa');
       const fotoAttachment = interaction.options.getAttachment('foto');
       const foto = fotoAttachment.url;
-      const agentiMenzionati = interaction.mentions.users.map(u => u.id) || [interaction.user.id];
+      const agentiOption = interaction.options.getUser('agenti');
+      const agentiMenzionati = agentiOption ? [agentiOption.id] : [interaction.user.id];
       
       const sequestroId = db.addSequestro(agentiMenzionati, nome, cognome, dataNascita, data, targa, motivo, multa);
       
@@ -753,70 +769,6 @@ const commands = {
         .setTimestamp();
       
       await interaction.reply({ embeds: [embed] });
-    }
-  },
-
-  timbratura: {
-    data: new SlashCommandBuilder()
-      .setName('timbratura')
-      .setDescription('Apre il cartellino di timbratura LSPD')
-      .addUserOption(option => 
-        option.setName('agente').setDescription('Agente (default: te stesso)').setRequired(false)
-      ),
-    execute: async (interaction) => {
-      const agente = interaction.options.getUser('agente') || interaction.user;
-      const agenteId = agente.id;
-      
-      if (agente.id !== interaction.user.id && !hasRole(interaction.member, STAFF_ROLE)) {
-        return interaction.reply({ content: '❌ Solo lo staff può visualizzare i cartellini di altri agenti!', ephemeral: true });
-      }
-      
-      let agenteData = db.getAgente(agenteId);
-      if (!agenteData) {
-        db.addAgente(agenteId, agente.username);
-        agenteData = db.getAgente(agenteId);
-      }
-      
-      const embed = new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle(`🚔 CARTELLINO LSPD - ${agenteData.nome}`)
-        .setDescription('**SALVE AGENTE LSPD**\n\nPER TIMBRARE IL TUO SERVIZIO USA QUESTI BOTTONI:\n\n' +
-          '🟢 **Timbra** - Inizia il servizio (registra ora di inizio)\n' +
-          '🔴 **Stimbra** - Termina il servizio (registra ore lavorate)\n' +
-          '📊 **Statistiche** - Visualizza le tue ore totali e statistiche\n' +
-          '⚫ **Stato** - Visualizza lo stato attuale del servizio')
-        .setFields([
-          { name: 'Ore Totali', value: `${agenteData.oreTotali.toFixed(2)}h`, inline: true },
-          { name: 'Stato', value: agenteData.inServizio ? '🟢 IN SERVIZIO' : '⚫ FUORI SERVIZIO', inline: true },
-          { name: '\u200b', value: '\u200b' }
-        ])
-        .setFooter({ text: `ID: ${agenteId}` });
-      
-      const row = new ActionRowBuilder()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`timbra_${agenteId}`)
-            .setLabel('Timbra')
-            .setStyle(ButtonStyle.Success)
-            .setEmoji('🟢'),
-          new ButtonBuilder()
-            .setCustomId(`stimbra_${agenteId}`)
-            .setLabel('Stimbra')
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('🔴'),
-          new ButtonBuilder()
-            .setCustomId(`stat_${agenteId}`)
-            .setLabel('Statistiche')
-            .setStyle(ButtonStyle.Primary)
-            .setEmoji('📊'),
-          new ButtonBuilder()
-            .setCustomId(`stato_${agenteId}`)
-            .setLabel('Stato')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('⚫')
-        );
-      
-      await interaction.reply({ embeds: [embed], components: [row] });
     }
   },
 
